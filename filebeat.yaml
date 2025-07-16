@@ -5,7 +5,7 @@ filebeat.inputs:
   - type: log
     enabled: true
     paths:
-      - "/var/log/capture/alerts-*.json"
+      - "${LOG_PATH}"
     close_inactive: 10s
     scan_frequency: 60s
 
