@@ -3,7 +3,7 @@ filebeat-1:
   container_name: filebeat-1
   network_mode: host
   volumes:
-    - /var/log/capture:/var/log/capture
+    - ${LOG_PATH}:/var/log/capture
     - /opt/filebeat/conf/filebeat.yaml:/usr/share/filebeat/filebeat.yml
     - /opt/filebeat/conf/etc/registry:/usr/share/filebeat/data
   user: root
