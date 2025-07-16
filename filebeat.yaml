@@ -1,0 +1,49 @@
+##################### Filebeat Configuration - PAF #########################
+
+#======================= Filebeat Inputs =============================
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - "/var/log/capture/alerts-*.json"
+    close_inactive: 10s
+    scan_frequency: 60s
+
+    fields:
+      log_type: "${LOG_TYPE}"
+      sensor_id: "${SENSOR_ID}"
+      client_id: "${ORG_ID}"
+    fields_under_root: true
+
+#================== Filebeat Global Options ===============================
+# NOTE: Use a correct absolute path inside the container
+filebeat.registry.path: "/usr/share/filebeat/data"
+
+#========================= Filebeat Modules ===============================
+filebeat.config.modules:
+  path: "${path.config}/modules.d/*.yml"
+  reload.enabled: true
+  reload.period: 60s
+
+#========================= Logstash Output ===============================
+output.logstash:
+  bulk_max_size: 8192
+  hosts: ["${HOST_IP}:${PORT}"]
+  loadbalance: true
+  worker: 5
+
+#============================= Logging ====================================
+logging.level: info
+logging.to_files: true
+logging.metrics.enabled: true
+logging.metrics.period: 60s
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat-1
+  keepfiles: 7
+
+#============================= Queue Settings ============================
+queue.mem:
+  events: 4096
+  flush.min_events: 512
+  flush.timeout: 1s
