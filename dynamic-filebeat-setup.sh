@@ -32,7 +32,7 @@ version: '3.7'
 
 services:
   ${DIR_NAME}:
-    image: docker.elastic.co/beats/filebeat:6.8.7
+    image: docker.elastic.co/beats/filebeat:7.17.29
     container_name: ${DIR_NAME}
     network_mode: host
     volumes:
