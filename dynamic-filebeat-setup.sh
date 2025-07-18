@@ -1,17 +1,43 @@
 #!/bin/bash
 
-echo "📦 Dynamic Filebeat Docker Setup for Log File Collection"
+echo "💎 Dynamic Filebeat Docker Setup for Log File Collection"
 
 # Prompt for a unique directory name
-read -p "Enter unique directory name (e.g., onelogin, apache, custom_logs): " DIR_NAME
+read -p "📦 Enter unique directory name (e.g., onelogin, apache, custom_logs): " DIR_NAME
 if [[ -z "$DIR_NAME" ]]; then
     echo "❌ Directory name cannot be empty!"
     exit 1
 fi
 
-# Prompt for log file paths (comma-separated)
-read -p "Enter full log file paths to monitor (comma-separated): " RAW_PATHS
-IFS=',' read -ra PATH_ARRAY <<< "$RAW_PATHS"
+# Prompt for log file paths interactively
+PATH_ARRAY=()
+
+read -p "📁 Enter a log file path to monitor: " input_path
+if [[ -z "$input_path" ]]; then
+    echo "❌ Log file path cannot be empty!"
+    exit 1
+fi
+PATH_ARRAY+=("$input_path")
+
+while true; do
+    read -p "📁 Do you want to add another log file path? (y/n): " yn
+    case $yn in
+        [Yy]* )
+            read -p "📁 Enter another log file path: " extra_path
+            if [[ -n "$extra_path" ]]; then
+                PATH_ARRAY+=("$extra_path")
+            else
+                echo "⚠️ Empty path skipped."
+            fi
+            ;;
+        [Nn]* )
+            break
+            ;;
+        * )
+            echo "Please answer y or n."
+            ;;
+    esac
+done
 
 # Prepare base directory
 BASE_PATH="/opt/docker/${DIR_NAME}"
@@ -46,13 +72,13 @@ $(echo -e "$VOLUME_MOUNTS")
     restart: always
 EOF
 
-# Write Filebeat config with corrected YAML
+# Write Filebeat config
 cat <<EOF > "${BASE_PATH}/${DIR_NAME}.yaml"
 ####################################################################################
 ##                   Filebeat Configuration - ${DIR_NAME}                         ##
 ####################################################################################
 
-#======================= Inputs ============================
+#======================= 📁 Inputs ============================
 filebeat.inputs:
   - type: log
     enabled: true
@@ -64,7 +90,7 @@ $(echo -e "$LOG_PATHS_PARSED")
       log.type: "${DIR_NAME}"
     fields_under_root: true
 
-#================== Global Options ==========================
+#================== 🌏 Global Options ==========================
 filebeat.registry.path: /usr/share/filebeat/data
 
 #========================= Modules ==========================
@@ -73,7 +99,7 @@ filebeat.config.modules:
   reload.enabled: true
   reload.period: 60s
 
-#========================= Logstash Output ==================
+#========================= 🎯 Output ==================
 #output.logstash:
 #  hosts: ["127.0.0.1:12154"]
 #  loadbalance: true
@@ -87,7 +113,7 @@ output.file:
   rotate_every_kb: 10000
   number_of_files: 7
 
-#============================= Logging =======================
+#============================= 🛠️ Logging =======================
 logging.level: info
 logging.to_files: true
 logging.metrics.enabled: true
@@ -97,7 +123,7 @@ logging.files:
   name: ${DIR_NAME}
   keepfiles: 7
 
-#============================= Queue Settings ================
+#============================= ⚙️ Queue Settings ================
 queue.mem:
   events: 4096
   flush.min_events: 512
@@ -110,5 +136,8 @@ chmod 600 "${BASE_PATH}/${DIR_NAME}.yaml"
 echo ""
 echo "✅ Filebeat config for '${DIR_NAME}' is ready!"
 echo "📁 Path: ${BASE_PATH}"
-echo "🚀 Run it with:"
+echo "Check Yml Cofig"
+echo ""
+echo "🚀 Then Run it with:"
+echo ""
 echo "   sudo docker-compose -f ${BASE_PATH}/docker-compose.yml up -d"
