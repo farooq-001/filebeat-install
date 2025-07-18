@@ -66,6 +66,7 @@ $(echo -e "$VOLUME_MOUNTS")
       - /opt/docker/${DIR_NAME}:/opt/docker/${DIR_NAME}
       - ${BASE_PATH}/${DIR_NAME}.yaml:/usr/share/filebeat/filebeat.yml
       - ${BASE_PATH}/registry:/usr/share/filebeat/data
+      - /opt/docker/${DIR_NAME}/var/tmp:/opt/docker/${DIR_NAME}/var/tmp
     environment:
       - BEAT_PATH=/usr/share/filebeat
     user: root
@@ -74,11 +75,11 @@ EOF
 
 # Write Filebeat config
 cat <<EOF > "${BASE_PATH}/${DIR_NAME}.yaml"
-####################################################################################
-##                   Filebeat Configuration - ${DIR_NAME}                         ##
-####################################################################################
+################################################################################
+#                        Filebeat Configuration - ${DIR_NAME}                  #
+################################################################################
 
-#======================= 📁 Inputs ============================
+#=============================== 📁 Inputs =================================#
 filebeat.inputs:
   - type: log
     enabled: true
@@ -90,16 +91,16 @@ $(echo -e "$LOG_PATHS_PARSED")
       log.type: "${DIR_NAME}"
     fields_under_root: true
 
-#================== 🌏 Global Options ==========================
+#=========================== 🌏 Global Options =============================#
 filebeat.registry.path: /usr/share/filebeat/data
 
-#========================= Modules ==========================
+#============================= 🧩 Modules ==================================#
 filebeat.config.modules:
   path: \${path.config}/modules.d/*.yml
   reload.enabled: true
   reload.period: 60s
 
-#========================= 🎯 Output ==================
+#============================== 🎯 Output ==================================#
 #output.logstash:
 #  hosts: ["127.0.0.1:12154"]
 #  loadbalance: true
@@ -113,21 +114,23 @@ output.file:
   rotate_every_kb: 10000
   number_of_files: 7
 
-#============================= 🛠️ Logging =======================
+#============================= 🛠️ Logging =================================#
 logging.level: info
 logging.to_files: true
 logging.metrics.enabled: true
 logging.metrics.period: 60s
 logging.files:
-  path: /var/log/filebeat/
+  path: /opt/docker/${DIR_NAME}/var/tmp
   name: ${DIR_NAME}
   keepfiles: 7
 
-#============================= ⚙️ Queue Settings ================
+#============================= ⚙️ Queue Settings ===========================#
 queue.mem:
-  events: 4096
-  flush.min_events: 512
-  flush.timeout: 1s
+  events: 6144
+  flush.min_events: 1024
+  flush.timeout: 5s
+
+
 EOF
 
 # Secure the config
